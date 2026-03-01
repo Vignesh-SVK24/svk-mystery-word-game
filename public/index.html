@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mystery Word Game 🔮</title>
+    <meta name="description"
+        content="Multiplayer local-LAN mystery word deduction game. Killer, Detective, and Guests — who will outwit whom?">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&family=Bangers&family=Orbitron:wght@700;900&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+
+    <!-- ══════════════════════  SCREEN 1: TITLE  ══════════════════════ -->
+    <div id="screen-title" class="screen active">
+        <div class="title-bg-particles" id="particles"></div>
+        <div class="title-card glass-card">
+            <div class="title-logo">
+                <span class="glyph pulse">🔮</span>
+                <h1 class="game-title">Mystery Word</h1>
+                <p class="game-subtitle">The social deduction word game</p>
+            </div>
+            <div class="title-form">
+                <input type="text" id="inp-name" class="inp" placeholder="Enter your display name..." maxlength="20"
+                    autocomplete="off">
+                <div class="title-buttons">
+                    <button id="btn-create" class="btn btn-primary">
+                        <span>✨</span> Create Lobby
+                    </button>
+                    <button id="btn-open-how-to-play-title" class="btn btn-outline-sm btn-info-toggle">
+                        <span>❓</span> How to Play
+                    </button>
+                    <div class="divider-or">or</div>
+                    <div class="join-row">
+                        <input type="text" id="inp-room" class="inp inp-sm" placeholder="Room Code (e.g. ABCD7)"
+                            autocomplete="off">
+                        <button id="btn-join" class="btn btn-outline">
+                            <span>🔗</span> Join Lobby
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <p class="title-note">📡 Same Wi-Fi required for LAN play</p>
+        </div>
+    </div>
+
+    <!-- ══════════════════════  SCREEN 2: LOBBY  ══════════════════════ -->
+    <div id="screen-lobby" class="screen">
+        <div class="lobby-layout">
+
+            <!-- Left: Player List -->
+            <div class="lobby-pane glass-card">
+                <div class="pane-header">
+                    <span class="pane-icon">👥</span>
+                    <h2>Players <span id="lobby-count" class="badge-count">0/10</span></h2>
+                </div>
+                <div id="player-list" class="player-list"></div>
+
+                <!-- Host Controls -->
+                <div id="host-controls" class="host-controls hidden">
+                    <div class="divider"></div>
+                    <h3 class="controls-title">⚙️ Host Settings</h3>
+                    <label class="toggle-row">
+                        <span>Enable Detective</span>
+                        <div class="toggle-switch">
+                            <input type="checkbox" id="chk-detective">
+                            <span class="slider"></span>
+                        </div>
+                    </label>
+                    <p id="detective-note" class="note">Requires ≥5 players</p>
+                    <label class="control-label">Difficulty</label>
+                    <div class="difficulty-row">
+                        <button class="btn-diff active" data-diff="easy">😊 Easy</button>
+                        <button class="btn-diff" data-diff="medium">🔥 Medium</button>
+                        <button class="btn-diff" data-diff="hard">💀 Hard</button>
+                    </div>
+                    <label class="control-label">Round Timer (seconds)</label>
+                    <input type="range" id="range-timer" min="30" max="180" value="90" class="range-input">
+                    <p class="range-val"><span id="timer-val">90</span>s</p>
+
+                    <label class="control-label">Meeting Duration (seconds)</label>
+                    <input type="range" id="range-meeting-timer" min="30" max="120" value="60" class="range-input">
+                    <p class="range-val"><span id="meeting-timer-val">60</span>s</p>
+
+                </div>
+
+                <!-- Ready + Start -->
+                <div class="lobby-actions">
+                    <button id="btn-ready" class="btn btn-outline w100">✋ Set Ready</button>
+                    <button id="btn-start" class="btn btn-primary w100 hidden">🚀 Start Game</button>
+                </div>
+            </div>
+
+            <!-- Right: Lobby Chat + Info -->
+            <div class="lobby-right">
+                <div class="lobby-info glass-card">
+                    <div class="lobby-meta">
+                        <div class="meta-item">
+                            <p class="info-label">Lobby Code</p>
+                            <p id="lobby-code" class="info-url">-----</p>
+                        </div>
+                        <div class="meta-item">
+                            <p class="info-label">Join Link</p>
+                            <p id="lobby-url" class="info-url">Connecting...</p>
+                        </div>
+                    </div>
+                    <div class="lobby-meta-actions">
+                        <button id="btn-copy-url" class="btn-icon" title="Copy share link">📋</button>
+                        <button id="btn-open-how-to-play-lobby" class="btn-icon" title="How to Play">❓</button>
+                    </div>
+                </div>
+                <div class="lobby-chat glass-card">
+                    <div class="pane-header">
+                        <span class="pane-icon">💬</span>
+                        <h2>Lobby Chat</h2>
+                    </div>
+                    <div id="lobby-chat-history" class="chat-history"></div>
+                    <form id="lobby-chat-form" class="chat-form">
+                        <input type="text" id="lobby-chat-input" class="inp" placeholder="Say something..."
+                            maxlength="200" autocomplete="off">
+                        <button type="submit" class="btn btn-icon-sm">➤</button>
+                    </form>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- ══════════════════════  SCREEN 3: ROLE REVEAL  ══════════════════════ -->
+    <div id="screen-role" class="screen">
+        <div class="role-reveal-card glass-card" id="role-card">
+            <h2 id="role-reveal-title" class="title-font center mb16" style="color:var(--cyan);">YOUR ROLE</h2>
+
+            <!-- SPECTATOR view -->
+            <div id="spectator-status" class="role-view hidden">
+                <div class="role-badge" style="background:var(--text-muted); color:var(--white);">👻 Spectator</div>
+                <p class="role-desc">You've been kicked out! You can watch others play, but you can't participate or
+                    vote until the match is over.</p>
+                <div class="spectator-icon-wrap center mt24">
+                    <span style="font-size: 64px; filter: grayscale(1);">🔍</span>
+                </div>
+            </div>
+
+            <!-- GUEST view -->
+            <div id="role-guest" class="role-view hidden">
+                <div class="role-badge guest-badge">👤 Guest</div>
+                <p class="role-desc">You are a Guest! The secret word is below. Type it to join the meeting!</p>
+
+                <div class="secret-word-box mt16 mb16">
+                    <p class="note">Secret Word:</p>
+                    <h2 id="guest-word-display" class="word-reveal">-----</h2>
+                </div>
+
+                <div class="mini-clue mb8" id="role-guest-clue-box">
+                    <p class="note">Hint:</p>
+                    <p id="role-guest-clue" class="clue-text"></p>
+                </div>
+                <div class="answer-row">
+                    <input type="text" id="inp-answer" class="inp" placeholder="Type your answer..." maxlength="20"
+                        autocomplete="off">
+                    <button id="btn-submit-answer" class="btn btn-primary">Submit ✓</button>
+                </div>
+                <p id="answer-feedback" class="answer-feedback"></p>
+            </div>
+
+            <!-- KILLER view -->
+            <div id="role-killer" class="role-view hidden">
+                <div class="role-badge killer-badge">🔪 Killer</div>
+                <p class="role-desc">Join the meeting now to start tricking the guests!</p>
+                <div class="clue-card">
+                    <div class="clue-icon">🕵️</div>
+                    <p id="killer-clue" class="clue-text"></p>
+                </div>
+                <p class="killer-goal">⚠️ Reduce alive players to 3 to win.</p>
+                <button id="btn-killer-ready" class="btn btn-primary w100 mt16">Ready for Meeting 👊</button>
+            </div>
+
+            <!-- DETECTIVE view -->
+            <div id="role-detective" class="role-view hidden">
+                <div class="role-badge detective-badge">🔍 Detective</div>
+                <p class="role-desc">Join the meeting now to find the killer!</p>
+                <div id="detective-suspect-list" class="detective-suspects"></div>
+                <button id="btn-det-ready" class="btn btn-primary w100 mt16">Ready for Meeting 👊</button>
+            </div>
+
+            <p class="note center mt16">Waiting for everyone to be ready...</p>
+        </div>
+    </div>
+
+    <!-- SCREEN 4: ROUND -->
+    <div id="screen-round" class="screen">
+        <div class="round-layout">
+            <aside class="round-sidebar glass-card">
+                <div class="pane-header">
+                    <span class="pane-icon">❤️</span>
+                    <h2>Alive <span id="alive-count" class="badge-count">-</span></h2>
+                </div>
+                <div id="alive-list" class="alive-list"></div>
+                <div id="voting-pane" class="sidebar-section hidden mt16">
+                    <div class="pane-header">
+                        <span class="pane-icon">🗳️</span>
+                        <h2 style="font-size: 14px;">Vote for Killer</h2>
+                    </div>
+                    <div id="meeting-vote-list" class="meeting-vote-list mt8"></div>
+                    <p id="voting-status" class="note mt8 center">Who is the suspect?</p>
+                </div>
+                <div class="guess-progress-wrap hidden" id="guess-progress-wrap">
+                    <p class="note">Correct guesses</p>
+                    <div class="guess-bar-bg">
+                        <div id="guess-bar" class="guess-bar"></div>
+                    </div>
+                    <p class="note" id="guess-count">0 / ?</p>
+                </div>
+            </aside>
+            <section class="round-center glass-card">
+                <div class="pane-header round-header">
+                    <span class="pane-icon">💬</span>
+                    <h2>Round <span id="round-number">1</span></h2>
+                    <div class="timer-wrap">
+                        <div id="timer-bar-bg" class="timer-bar-bg">
+                            <div id="timer-bar" class="timer-bar"></div>
+                        </div>
+                        <span id="timer-display" class="timer-display">90s</span>
+                    </div>
+                </div>
+                <div id="round-chat-history" class="chat-history"></div>
+                <form id="round-chat-form" class="chat-form">
+                    <input type="text" id="round-chat-input" class="inp" placeholder="Chat with everyone..."
+                        maxlength="200" autocomplete="off">
+                    <button type="submit" class="btn btn-icon-sm">➤</button>
+                </form>
+            </section>
+            <aside class="round-sidebar glass-card">
+                <div class="pane-header">
+                    <span class="pane-icon">🎭</span>
+                    <h2>My Role</h2>
+                </div>
+                <div id="my-role-panel" class="my-role-panel">Loading...</div>
+            </aside>
+        </div>
+    </div>
+
+    <div id="screen-meeting" class="screen">
+        <div class="meeting-floor glass-card">
+            <div class="meeting-hall-header">
+                <div class="hall-title">
+                    <span class="hall-icon">🛎️</span>
+                    <h1>Meeting in Progress</h1>
+                </div>
+                <div class="hall-timer-wrap">
+                    <div id="meeting-timer-bar" class="timer-bar-bg">
+                        <div class="timer-bar fill" style="width: 100%;"></div>
+                    </div>
+                    <span id="meeting-timer-display" class="timer-display">Waiting...</span>
+                </div>
+            </div>
+
+            <div class="meeting-main-grid">
+                <!-- Voting Side -->
+                <div class="voting-hub">
+                    <div class="pane-header">
+                        <span class="pane-icon">🗳️</span>
+                        <h2>Cast Your Vote</h2>
+                        <span id="hall-vote-count" class="badge-count">0/0</span>
+                    </div>
+                    <div id="hall-vote-grid" class="meeting-vote-grid mt16">
+                        <!-- Filled by JS -->
+                    </div>
+                    <p id="hall-voting-status" class="voting-status-text">Discussion phase... Vote whenever you are
+                        certain.</p>
+                </div>
+
+                <!-- Chat Side -->
+                <div class="meeting-chat-hub">
+                    <div class="pane-header">
+                        <span class="pane-icon">💬</span>
+                        <h2>Meeting Chat</h2>
+                    </div>
+                    <div id="hall-chat-history" class="chat-history"></div>
+                    <form id="hall-chat-form" class="chat-form">
+                        <input type="text" id="hall-chat-input" class="inp"
+                            placeholder="Discuss the suspicious letters..." maxlength="200" autocomplete="off">
+                        <button type="submit" class="btn btn-icon-sm">➤</button>
+                    </form>
+                </div>
+            </div>
+
+            <div class="hall-footer">
+                <div id="hall-my-role-info" class="hall-my-role-card">
+                    Your role: <span id="hall-my-role-text">---</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ══════════════════════  VOTE MODAL (REVAMPED)  ══════════════════════ -->
+    <div id="modal-vote" class="modal-overlay hidden">
+        <div class="modal glass-card">
+            <div class="modal-header">
+                <h2>🗳️ Cast Your Vote</h2>
+                <p class="note">Who is the Killer? (Most voted will be kicked)</p>
+            </div>
+            <div id="vote-options-list" class="suspect-pick-list"></div>
+            <div id="vote-tally-info" class="vote-tally-info">
+                <span id="voted-count">0</span> / <span id="total-to-vote">0</span> players voted
+            </div>
+            <p id="vote-status-text" class="note center"></p>
+        </div>
+    </div>
+
+    <!-- ══════════════════════  KICK RESULT MODAL  ══════════════════════ -->
+    <div id="modal-kick-result" class="modal-overlay hidden">
+        <div class="modal glass-card">
+            <div id="kick-stamp" class="kick-stamp hidden">⛔</div>
+            <h2 id="kick-result-title">Result</h2>
+            <p id="kick-result-body" class="modal-body-text"></p>
+            <div id="kick-role-reveal" class="role-reveal-chip hidden"></div>
+            <p id="kick-continue-text" class="note center"></p>
+        </div>
+    </div>
+
+    <!-- ══════════════════════  SCREEN 5: GAME END  ══════════════════════ -->
+    <div id="screen-end" class="screen">
+        <div class="end-card glass-card">
+            <div id="end-winner-banner" class="winner-banner">
+                <span id="end-winner-emoji" class="winner-emoji">🏆</span>
+                <h1 id="end-winner-title">Winners!</h1>
+            </div>
+            <p id="end-message" class="end-message"></p>
+            <div class="stats-block">
+                <h3>📊 Game Stats</h3>
+                <div id="stats-table" class="stats-table"></div>
+            </div>
+            <button id="btn-play-again" class="btn btn-primary">🔄 Play Again</button>
+            <p id="play-again-status" class="note mt8 center"></p>
+        </div>
+    </div>
+
+    <!-- ══════════════════════  TOAST NOTIFICATIONS  ══════════════════════ -->
+    <div id="toast-container" class="toast-container"></div>
+
+    <!-- ══════════════════════  MODAL: HOW TO PLAY  ══════════════════════ -->
+    <div id="modal-how-to-play" class="modal-overlay hidden">
+        <div class="modal glass-card modal-lg">
+            <div class="modal-header">
+                <h2>🔮 How to Play</h2>
+                <button class="btn-close-modal" id="btn-close-how-to-play">×</button>
+            </div>
+            <div class="modal-scroll-area">
+                <section class="rules-section">
+                    <h3>🎭 The Roles</h3>
+                    <div class="rules-grid">
+                        <div class="rule-card killer">
+                            <h4>🔪 Killer (1)</h4>
+                            <p>Receives a <strong>riddle or sentence</strong> that hints at the secret word. Your goal
+                                is to blend in and mislead others.</p>
+                        </div>
+                        <div class="rule-card detective">
+                            <h4>🔍 Detective (0-1)</h4>
+                            <p>Unlocked at 5+ players. Can see a suspect list and help lead the discussion to find the
+                                killer.</p>
+                        </div>
+                        <div class="rule-card guest">
+                            <h4>👤 Guests (Rest)</h4>
+                            <p>You receive the secret word as <strong>scrambled tiles</strong>. Unscramble it to join
+                                the meeting!</p>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="rules-section">
+                    <h3>🎯 Victory Conditions</h3>
+                    <ul class="rules-list">
+                        <li><strong>Guests Win:</strong> Successfully identify and kick the Killer out.</li>
+                        <li><strong>Killer Wins:</strong> Reduce the number of alive players to <strong>3</strong>.</li>
+                    </ul>
+                </section>
+
+                <section class="rules-section">
+                    <h3>🔄 Game Flow</h3>
+                    <ol class="rules-list">
+                        <li><strong>Reveal:</strong> Get your role and secret clue/tiles.</li>
+                        <li><strong>Round:</strong> Guests unscramble words while chatting. Anyone can call a meeting
+                            once they're "Ready".</li>
+                        <li><strong>Meeting:</strong> Everyone discusses the mystery. Cast your votes on who is most
+                            suspicious.</li>
+                        <li><strong>Kick:</strong> The player with the most votes is removed. Their role is revealed!
+                        </li>
+                    </ol>
+                </section>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-primary w100"
+                    onclick="document.getElementById('modal-how-to-play').classList.add('hidden')">Got it!</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ══════════════════════  VOTE SUSPECT SELECT MODAL  ══════════════════════ -->
+    <div id="modal-suspect-pick" class="modal-overlay hidden">
+        <div class="modal glass-card">
+            <div class="modal-header">
+                <h2>🎯 Select a Suspect</h2>
+                <p class="note">Who do you want to call a vote against?</p>
+            </div>
+            <div id="suspect-pick-list" class="suspect-pick-list"></div>
+            <button id="btn-cancel-vote" class="btn btn-outline w100">Cancel</button>
+        </div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="game.js"></script>
+</body>
+
+</html>

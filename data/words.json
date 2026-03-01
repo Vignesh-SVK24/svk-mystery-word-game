@@ -1,0 +1,368 @@
+{
+    "easy": [
+        {
+            "word": "apple",
+            "clues": [
+                "A common fruit used in pies.",
+                "It keeps the doctor away.",
+                "This fruit fell on Newton's head according to legend."
+            ]
+        },
+        {
+            "word": "ocean",
+            "clues": [
+                "A large body of salty water.",
+                "Covers about 70% of Earth's surface.",
+                "Whales and sharks call this home."
+            ]
+        },
+        {
+            "word": "bread",
+            "clues": [
+                "A staple food made from flour and water.",
+                "It comes out of an oven golden and warm.",
+                "Sandwiches are impossible without this."
+            ]
+        },
+        {
+            "word": "piano",
+            "clues": [
+                "A musical instrument with black and white keys.",
+                "Beethoven composed masterpieces on this.",
+                "It has 88 keys and makes beautiful harmonies."
+            ]
+        },
+        {
+            "word": "cloud",
+            "clues": [
+                "It floats in the sky and brings rain.",
+                "Made of tiny water droplets high in the atmosphere.",
+                "Where lightning is born."
+            ]
+        },
+        {
+            "word": "stone",
+            "clues": [
+                "A hard solid mineral found in nature.",
+                "You can skip it across water.",
+                "Used to build ancient castles."
+            ]
+        },
+        {
+            "word": "flame",
+            "clues": [
+                "It gives off heat and light.",
+                "Moths are famously attracted to this.",
+                "The thing that candles produce."
+            ]
+        },
+        {
+            "word": "river",
+            "clues": [
+                "It flows from mountains to the sea.",
+                "Fish swim upstream through this.",
+                "The Nile is the world's longest example."
+            ]
+        },
+        {
+            "word": "tower",
+            "clues": [
+                "A tall narrow structure that rises above everything.",
+                "Rapunzel was locked in one.",
+                "The Eiffel structure in Paris is a famous one."
+            ]
+        },
+        {
+            "word": "brush",
+            "clues": [
+                "Artists use this to paint.",
+                "Your teeth need this every morning.",
+                "It has bristles and a handle."
+            ]
+        },
+        {
+            "word": "grapes",
+            "clues": [
+                "Small fruits that grow in clusters on a vine.",
+                "They can be fermented into wine.",
+                "Purple or green, sweet or sour."
+            ]
+        },
+        {
+            "word": "medal",
+            "clues": [
+                "Athletes wear this around their necks after winning.",
+                "It can be gold, silver, or bronze.",
+                "A symbol of achievement."
+            ]
+        },
+        {
+            "word": "sugar",
+            "clues": [
+                "It makes things sweet.",
+                "Bees make honey which contains this.",
+                "Too much of it is bad for your teeth."
+            ]
+        },
+        {
+            "word": "boots",
+            "clues": [
+                "Footwear that covers your ankle and sometimes your calf.",
+                "Perfect for muddy or snowy weather.",
+                "Cowboys are famous for wearing these."
+            ]
+        },
+        {
+            "word": "chair",
+            "clues": [
+                "Furniture designed for one person to sit on.",
+                "It has four legs and a back support.",
+                "Every office and classroom has many of these."
+            ]
+        }
+    ],
+    "medium": [
+        {
+            "word": "planet",
+            "clues": [
+                "What does Earth belong to in the night-sky family?",
+                "It orbits a star and has gravity strong enough to be round.",
+                "Mars, Jupiter, and Saturn are examples."
+            ]
+        },
+        {
+            "word": "bridge",
+            "clues": [
+                "It spans across rivers and valleys.",
+                "It connects two places that water separates.",
+                "The Golden Gate in San Francisco is a famous example."
+            ]
+        },
+        {
+            "word": "mirror",
+            "clues": [
+                "It always shows you the same face.",
+                "Snow White's stepmother spoke to this daily.",
+                "A reversed reflection is what you get."
+            ]
+        },
+        {
+            "word": "candle",
+            "clues": [
+                "It burns slowly and lights a room in the dark.",
+                "Birthday cakes have these blown out for wishes.",
+                "Made of wax with a wick in the center."
+            ]
+        },
+        {
+            "word": "jungle",
+            "clues": [
+                "A dense tropical forest full of wildlife.",
+                "Tarzan swung through the trees of this.",
+                "Mowgli from The Jungle Book lived here."
+            ]
+        },
+        {
+            "word": "castle",
+            "clues": [
+                "A large fortified medieval structure with turrets.",
+                "Kings and queens lived here to stay safe from enemies.",
+                "You can visit many in Europe."
+            ]
+        },
+        {
+            "word": "desert",
+            "clues": [
+                "A vast dry land where rain rarely falls.",
+                "Camels are perfectly adapted for this terrain.",
+                "The Sahara is the world's largest hot one."
+            ]
+        },
+        {
+            "word": "anchor",
+            "clues": [
+                "What keeps a ship from drifting away?",
+                "It is thrown into the sea and holds a vessel in place.",
+                "Often tattooed on sailors' arms."
+            ]
+        },
+        {
+            "word": "wallet",
+            "clues": [
+                "Men often keep this in their back pocket.",
+                "It stores credit cards, cash, and IDs.",
+                "You panic when you can't find it."
+            ]
+        },
+        {
+            "word": "spider",
+            "clues": [
+                "It spins silk webs and has eight legs.",
+                "Peter Parker was bitten by one.",
+                "Charlotte was a famous literary one."
+            ]
+        },
+        {
+            "word": "lantern",
+            "clues": [
+                "An old-fashioned portable light source.",
+                "In many Asian festivals, they are released into the sky.",
+                "Aladdin's magical object was technically one."
+            ]
+        },
+        {
+            "word": "compass",
+            "clues": [
+                "A navigation tool that always points north.",
+                "Pirates and explorers relied on this to find their way.",
+                "It uses Earth's magnetic field."
+            ]
+        },
+        {
+            "word": "thunder",
+            "clues": [
+                "The loud sound that follows a lightning strike.",
+                "It is caused by rapid air expansion.",
+                "Thor, the Norse god, was associated with this."
+            ]
+        },
+        {
+            "word": "trophy",
+            "clues": [
+                "A shiny cup awarded to the winner of a contest.",
+                "Sports teams compete fiercely to lift this.",
+                "Your name gets engraved on it."
+            ]
+        },
+        {
+            "word": "shadow",
+            "clues": [
+                "It follows you wherever you go in sunlight.",
+                "During a solar eclipse, Earth walks through one.",
+                "It disappears in the dark."
+            ]
+        }
+    ],
+    "hard": [
+        {
+            "word": "eclipse",
+            "clues": [
+                "When one celestial body blocks another's light.",
+                "The moon can cause a solar version of this.",
+                "Ancient people feared this rare sky event."
+            ]
+        },
+        {
+            "word": "labyrinth",
+            "clues": [
+                "A complex maze that's nearly impossible to escape.",
+                "The Minotaur lived in one in Greek mythology.",
+                "It symbolizes confusion and endless searching."
+            ]
+        },
+        {
+            "word": "whisper",
+            "clues": [
+                "Communication that barely disturbs the air.",
+                "Secrets travel this way to avoid being overheard.",
+                "The opposite of a shout."
+            ]
+        },
+        {
+            "word": "phantom",
+            "clues": [
+                "An apparition or ghostly presence.",
+                "The Opera has a famous masked one.",
+                "It exists but cannot be touched."
+            ]
+        },
+        {
+            "word": "venom",
+            "clues": [
+                "A toxic substance injected by some creatures.",
+                "Snakes and spiders use this as a weapon.",
+                "It can paralyze or kill its target."
+            ]
+        },
+        {
+            "word": "cryptic",
+            "clues": [
+                "Something with a hidden or mysterious meaning.",
+                "Ancient inscriptions are often described this way.",
+                "Crossword puzzles of this type are the hardest to solve."
+            ]
+        },
+        {
+            "word": "ember",
+            "clues": [
+                "A glowing piece of coal or wood from a dying fire.",
+                "It persists long after the flames go out.",
+                "Blow on it gently and fire might return."
+            ]
+        },
+        {
+            "word": "oracle",
+            "clues": [
+                "A person or place believed to give divine prophecy.",
+                "Ancient Greeks consulted the one at Delphi.",
+                "It knows the answer before the question is asked."
+            ]
+        },
+        {
+            "word": "mirage",
+            "clues": [
+                "An optical illusion caused by heat in the desert.",
+                "Thirsty travellers see this and think they've found water.",
+                "It looks real but vanishes as you approach."
+            ]
+        },
+        {
+            "word": "abyss",
+            "clues": [
+                "A bottomless or immeasurably deep space.",
+                "Nietzsche warned that if you stare into it, it stares back.",
+                "It represents the deepest unknown."
+            ]
+        },
+        {
+            "word": "quartz",
+            "clues": [
+                "A hard crystalline mineral found in rocks.",
+                "Watches use this to keep precise time.",
+                "It comes in many colors, including rose and smoky varieties."
+            ]
+        },
+        {
+            "word": "cipher",
+            "clues": [
+                "A secret method of writing using coded letters.",
+                "Spies use this to pass messages safely.",
+                "Breaking one is the job of a cryptographer."
+            ]
+        },
+        {
+            "word": "dagger",
+            "clues": [
+                "A short double-edged blade used for stabbing.",
+                "Julius Caesar was assassinated with multiple of these.",
+                "Smaller than a sword, deadlier up close."
+            ]
+        },
+        {
+            "word": "scarlet",
+            "clues": [
+                "A brilliant bright shade of red.",
+                "The Letter by Hawthorne features this color in its title.",
+                "It is deeper than crimson and brighter than burgundy."
+            ]
+        },
+        {
+            "word": "relic",
+            "clues": [
+                "An object surviving from the past with historical significance.",
+                "Museums preserve these from ancient civilizations.",
+                "Indiana Jones spent his career hunting these."
+            ]
+        }
+    ]
+}
