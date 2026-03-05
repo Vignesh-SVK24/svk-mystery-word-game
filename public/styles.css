@@ -2206,7 +2206,7 @@ input:checked+.slider::before {
     }
 
     /* Meeting Responsive */
-    #screen-meeting {
+    #screen-meeting.active {
         padding: 4px;
         height: auto;
         min-height: 100vh;

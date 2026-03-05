@@ -460,24 +460,31 @@ function renderMyRolePanel() {
 
     panel.innerHTML = content + meetingBtnHtml;
 
-    // Attach listeners
-    if (state.answerSubmitted) {
-        const emitMeeting = () => {
-            socket.emit('callMeeting');
-            const b1 = $('btn-call-meeting');
-            const b2 = $('btn-call-meeting-mobile');
-            if (b1) { b1.disabled = true; b1.textContent = 'Calling...'; }
-            if (b2) { b2.disabled = true; b2.textContent = '...'; }
-        };
-        $('btn-call-meeting')?.addEventListener('click', emitMeeting);
+    // Support both sidebar and header buttons
+    const btnMob = $('btn-call-meeting-mobile');
+    const btnHall = $('btn-call-meeting');
 
-        const mobBtn = $('btn-call-meeting-mobile');
-        if (mobBtn) {
-            mobBtn.classList.remove('hidden');
-            mobBtn.onclick = emitMeeting;
+    const emitMeeting = () => {
+        socket.emit('callMeeting');
+        if (btnHall) { btnHall.disabled = true; btnHall.textContent = 'Calling...'; }
+        if (btnMob) { btnMob.disabled = true; btnMob.textContent = '...'; }
+    };
+
+    if (btnHall) {
+        btnHall.addEventListener('click', emitMeeting);
+    }
+
+    if (btnMob) {
+        btnMob.classList.remove('hidden');
+        if (state.answerSubmitted) {
+            btnMob.disabled = false;
+            btnMob.style.opacity = '1';
+            btnMob.onclick = emitMeeting;
+        } else {
+            btnMob.disabled = true;
+            btnMob.style.opacity = '0.4';
+            btnMob.onclick = null;
         }
-    } else {
-        $('btn-call-meeting-mobile')?.classList.add('hidden');
     }
 
     if (state.role === 'guest' && !state.answerSubmitted) {
