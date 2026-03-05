@@ -58,12 +58,17 @@ class GameManager {
     addPlayer(socket, playerName, sessionToken) {
         socket.join(this.roomCode); // Join the socket room
         const playerId = uuidv4();
+        const accessories = [null, 'sword', 'doll', 'flower', 'shield'];
+        const pets = [null, 'cat', 'dog', 'goat'];
+
         const player = {
             id: playerId,
             name: playerName,
             socketId: socket.id,
             sessionToken,
             color: this._assignRandomColor(),
+            accessory: accessories[Math.floor(Math.random() * accessories.length)],
+            pet: pets[Math.floor(Math.random() * pets.length)],
             ready: false,
             role: null,        // 'killer' | 'detective' | 'guest'
             alive: true,
@@ -136,7 +141,9 @@ class GameManager {
             spectator: p.spectator,
             disconnected: p.disconnected,
             isHost: p.id === this.hostId,
-            color: p.color
+            color: p.color,
+            accessory: p.accessory,
+            pet: p.pet
         }));
     }
 
@@ -197,7 +204,9 @@ class GameManager {
                 name: p.name,
                 ready: p.ready,
                 isHost: p.id === this.hostId,
-                color: p.color
+                color: p.color,
+                accessory: p.accessory,
+                pet: p.pet
             })),
             hostId: this.hostId,
             difficulty: this.difficulty,

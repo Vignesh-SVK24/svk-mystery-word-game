@@ -5,10 +5,10 @@
 
 /* ── Variables ──────────────────────────────────────────────── */
 :root {
-    --bg: #121420;
-    --bg2: #1a1d2e;
+    --bg: #1a0a0a;
+    --bg2: #2a1010;
     --surface: #ffffff;
-    --surface-dark: #1e2235;
+    --surface-dark: #2e1515;
     --border: #000000;
     --purple: #c084fc;
     --purple-dark: #a855f7;
@@ -227,6 +227,78 @@ body::after {
     opacity: 0.6;
 }
 
+/* ── Accessories ───────────────────────────────────────────── */
+.acc-sword,
+.acc-doll,
+.acc-flower,
+.acc-shield {
+    position: absolute;
+    font-size: 16px;
+    z-index: 10;
+    filter: drop-shadow(2px 2px 0px rgba(0, 0, 0, 0.5));
+    pointer-events: none;
+}
+
+.acc-sword {
+    right: -10px;
+    top: 10px;
+    transform: rotate(15deg);
+    animation: weapon-swing 2s ease-in-out infinite;
+}
+
+.acc-shield {
+    left: -10px;
+    top: 12px;
+    font-size: 14px;
+}
+
+.acc-flower {
+    top: -10px;
+    left: 10px;
+    font-size: 14px;
+}
+
+.acc-doll {
+    right: -8px;
+    bottom: 2px;
+    font-size: 14px;
+}
+
+/* ── Pets ──────────────────────────────────────────────────── */
+.mini-pet {
+    position: absolute;
+    bottom: -10px;
+    right: -24px;
+    font-size: 18px;
+    z-index: 5;
+    animation: pet-bounce 1.5s ease-in-out infinite;
+    filter: drop-shadow(2px 2px 0px rgba(0, 0, 0, 0.3));
+}
+
+@keyframes weapon-swing {
+
+    0%,
+    100% {
+        transform: rotate(15deg);
+    }
+
+    50% {
+        transform: rotate(35deg) translateY(-2px);
+    }
+}
+
+@keyframes pet-bounce {
+
+    0%,
+    100% {
+        transform: translateY(0) scale(1.1, 0.9);
+    }
+
+    50% {
+        transform: translateY(-6px) scale(0.9, 1.1);
+    }
+}
+
 @keyframes bean-sway {
 
     0%,
@@ -269,8 +341,8 @@ body::after {
 
 /* ═══════════════  SCREEN 1 — TITLE  ═══════════════════════════ */
 #screen-title {
-    background: radial-gradient(ellipse at 20% 50%, rgba(168, 85, 247, 0.15) 0%, transparent 60%),
-        radial-gradient(ellipse at 80% 50%, rgba(6, 182, 212, 0.12) 0%, transparent 60%),
+    background: radial-gradient(ellipse at 20% 50%, rgba(180, 30, 30, 0.2) 0%, transparent 60%),
+        radial-gradient(ellipse at 80% 50%, rgba(120, 20, 20, 0.15) 0%, transparent 60%),
         var(--bg);
 }
 
@@ -889,6 +961,9 @@ input:checked+.slider::before {
 .chat-form {
     display: flex;
     gap: 8px;
+    position: relative;
+    z-index: 50;
+    pointer-events: auto;
 }
 
 /* Typing indicator */
@@ -2074,15 +2149,48 @@ input:checked+.slider::before {
     }
 }
 
+#btn-call-meeting-mobile {
+    display: none;
+}
+
 /* ── Mobile fixes ────────────────────────────────────────────── */
 @media (max-width: 600px) {
+    #btn-call-meeting-mobile {
+        display: inline-flex !important;
+    }
+
+    #btn-call-meeting-mobile.hidden {
+        display: none !important;
+    }
+
+    /* Round Screen Mobile */
+    #screen-round {
+        padding: 0;
+    }
+
     .round-sidebar:last-child {
-        display: none;
+        display: block;
+        padding: 12px;
+        border-bottom: 2px solid var(--border);
+        order: -1;
+        /* Put role panel at top */
     }
 
     .round-layout {
-        grid-template-columns: 1fr;
-        grid-template-rows: auto 1fr;
+        display: flex;
+        flex-direction: column;
+        height: 100vh;
+        width: 100vw;
+        gap: 0;
+    }
+
+    .round-center {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        padding: 12px;
+        border: none;
+        border-radius: 0;
     }
 
     .round-sidebar:first-child {
@@ -2095,5 +2203,97 @@ input:checked+.slider::before {
 
     .role-reveal-card {
         padding: 24px 18px;
+    }
+
+    /* Meeting Responsive */
+    #screen-meeting {
+        padding: 4px;
+        height: auto;
+        min-height: 100vh;
+        display: block;
+        /* Override flex if needed */
+    }
+
+    .meeting-floor {
+        height: auto;
+        max-height: none;
+        overflow-y: visible;
+        border-radius: var(--radius-sm);
+    }
+
+    .meeting-hall-header {
+        flex-direction: row;
+        /* Keep icon and title side-by-side but smaller */
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 8px;
+        padding: 12px 16px;
+    }
+
+    .hall-title h1 {
+        font-size: 1.2rem;
+    }
+
+    .hall-icon {
+        font-size: 24px;
+    }
+
+    .hall-timer-wrap {
+        width: 100%;
+        margin-top: 4px;
+        justify-content: space-between;
+    }
+
+    .meeting-main-grid {
+        grid-template-columns: 1fr;
+        height: auto;
+        overflow: visible;
+    }
+
+    .voting-hub {
+        border-right: none;
+        border-bottom: 2px solid var(--border);
+        padding: 16px 12px;
+    }
+
+    .meeting-chat-hub {
+        padding: 16px 12px;
+        background: rgba(0, 0, 0, 0.2);
+    }
+
+    #hall-chat-history {
+        height: 250px;
+        /* Fixed height for mobile usability */
+        font-size: 13px;
+    }
+
+    .meeting-vote-grid {
+        grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+        gap: 8px;
+        overflow: visible;
+    }
+
+    .meeting-vote-grid .vote-btn {
+        padding: 12px;
+        min-height: 60px;
+        font-size: 13px;
+    }
+
+    .voting-status-text {
+        margin-top: 12px;
+        font-size: 12px;
+        padding: 10px;
+    }
+
+    .hall-footer {
+        padding: 12px;
+        display: flex;
+        justify-content: center;
+    }
+
+    .hall-my-role-card {
+        justify-content: center;
+        text-align: center;
+        width: 100%;
     }
 }

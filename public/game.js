@@ -199,7 +199,7 @@ function renderLobby(data) {
         div.className = `player-item${p.isHost ? ' is-host' : ''}`;
 
         // Generate bean character
-        const beanHtml = getBeanHtml(p.color || '#ffffff');
+        const beanHtml = getBeanHtml(p.color || '#ffffff', p.accessory, p.pet);
 
         div.innerHTML = `
       ${beanHtml}
@@ -406,7 +406,7 @@ function renderAliveList(players) {
         const item = document.createElement('div');
         item.className = 'alive-item';
         item.dataset.id = p.id;
-        const beanHtml = getBeanHtml(p.color || '#ffffff');
+        const beanHtml = getBeanHtml(p.color || '#ffffff', p.accessory, p.pet);
         item.innerHTML = `<span class="alive-avatar">${beanHtml}</span><span class="alive-name">${escHtml(p.name)}</span>`;
         list.appendChild(item);
     });
@@ -462,11 +462,22 @@ function renderMyRolePanel() {
 
     // Attach listeners
     if (state.answerSubmitted) {
-        $('btn-call-meeting')?.addEventListener('click', () => {
+        const emitMeeting = () => {
             socket.emit('callMeeting');
-            $('btn-call-meeting').disabled = true;
-            $('btn-call-meeting').textContent = 'Calling...';
-        });
+            const b1 = $('btn-call-meeting');
+            const b2 = $('btn-call-meeting-mobile');
+            if (b1) { b1.disabled = true; b1.textContent = 'Calling...'; }
+            if (b2) { b2.disabled = true; b2.textContent = '...'; }
+        };
+        $('btn-call-meeting')?.addEventListener('click', emitMeeting);
+
+        const mobBtn = $('btn-call-meeting-mobile');
+        if (mobBtn) {
+            mobBtn.classList.remove('hidden');
+            mobBtn.onclick = emitMeeting;
+        }
+    } else {
+        $('btn-call-meeting-mobile')?.classList.add('hidden');
     }
 
     if (state.role === 'guest' && !state.answerSubmitted) {
@@ -749,7 +760,7 @@ function renderMeetingVoting(allAlivePlayers, attendees = []) {
             btn.disabled = true;
         }
 
-        const beanHtml = getBeanHtml(p.color || '#ffffff');
+        const beanHtml = getBeanHtml(p.color || '#ffffff', p.accessory, p.pet);
         btn.innerHTML = `
             <span class="vote-avatar">${beanHtml}</span>
             <div class="vote-name-wrap" style="flex:1; text-align:left;">
@@ -863,8 +874,20 @@ function getBeanColor(name) {
     return colors[Math.abs(hash) % colors.length];
 }
 
-function getBeanHtml(color) {
+function getBeanHtml(color, accessory, pet) {
     const safeColor = color || '#ffffff';
+
+    let accHtml = '';
+    if (accessory === 'sword') accHtml = '<div class="acc-sword">⚔️</div>';
+    if (accessory === 'doll') accHtml = '<div class="acc-doll">🧸</div>';
+    if (accessory === 'flower') accHtml = '<div class="acc-flower">🌸</div>';
+    if (accessory === 'shield') accHtml = '<div class="acc-shield">🛡️</div>';
+
+    let petHtml = '';
+    if (pet === 'cat') petHtml = '<div class="mini-pet pet-cat">🐱</div>';
+    if (pet === 'dog') petHtml = '<div class="mini-pet pet-dog">🐶</div>';
+    if (pet === 'goat') petHtml = '<div class="mini-pet pet-goat">🐐</div>';
+
     return `
         <div class="bean-container" style="--bean-color: ${safeColor};">
             <div class="bean-backpack" style="background-color: ${safeColor};"></div>
@@ -873,6 +896,8 @@ function getBeanHtml(color) {
             <div class="bean-nose" style="background-color: ${safeColor};"></div>
             <div class="bean-leg-l" style="background-color: ${safeColor};"></div>
             <div class="bean-leg-r" style="background-color: ${safeColor};"></div>
+            ${accHtml}
+            ${petHtml}
         </div>
     `;
 }
