@@ -672,6 +672,10 @@ function resetClientState() {
     state.authToken = cachedAuthStr;
     state.authUsername = cachedAuthUsername;
 
+    // Update title screen inputs
+    if (cachedName) $('inp-name').value = cachedName;
+    $('inp-room').value = '';
+
     showScreen('title');
     toast('Exited room.', 'info');
 }
