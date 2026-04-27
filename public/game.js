@@ -8,6 +8,8 @@
 // ── State ────────────────────────────────────────────────────
 const state = {
     sessionToken: localStorage.getItem('mwg_session') || null,
+    authToken: localStorage.getItem('mwg_auth') || null,
+    authUsername: null,
     playerId: null,
     playerName: '',
     isHost: false,
@@ -248,17 +250,20 @@ function showRoleReveal(roleData) {
     state.hasVoted = false; // Reset at start of round
     state.selectedDetSuspect = null;
 
+    // ── IMPORTANT: Hide ALL role views first to prevent dual-role display ──
+    ['role-guest', 'role-killer', 'role-detective', 'spectator-status'].forEach(id => {
+        const el = $(id);
+        if (el) el.classList.add('hidden');
+    });
+
     // Handle spectator view
     if (roleData.isAlive === false) {
         $('role-reveal-title').textContent = '⚠️ YOU ARE SPECTATING';
         $('role-reveal-title').style.color = 'var(--text-muted)';
         $('spectator-status').classList.remove('hidden');
-        // Hide all active role sections
-        ['role-guest', 'role-killer', 'role-detective'].forEach(id => $(id).classList.add('hidden'));
     } else {
         $('role-reveal-title').textContent = 'YOUR ROLE';
         $('role-reveal-title').style.color = 'var(--cyan)';
-        $('spectator-status').classList.add('hidden');
 
         if (roleData.role === 'guest') {
             $('role-guest').classList.remove('hidden');
@@ -614,6 +619,40 @@ function showGameEnd(data) {
         $('btn-play-again').disabled = true;
         $('btn-play-again').textContent = 'Waiting for others...';
     };
+
+    // Exit button
+    const exitBtn = $('btn-exit-game');
+    if (exitBtn) {
+        exitBtn.onclick = () => {
+            socket.emit('exitGame');
+            // Reset all client state
+            state.playerId = null;
+            state.playerName = '';
+            state.isHost = false;
+            state.role = null;
+            state.privatePayload = null;
+            state.roundId = 0;
+            state.alivePlayers = [];
+            state.lobbyPlayers = [];
+            state.hasVoted = false;
+            state.answerSubmitted = false;
+            state.gameState = 'lobby';
+            state.roomCode = null;
+            state.roleData = null;
+            state.correctWord = null;
+            state.sessionToken = null;
+            localStorage.removeItem('mwg_session');
+            // Clear chat histories
+            ['lobby-chat-history', 'round-chat-history', 'hall-chat-history'].forEach(id => {
+                const el = $(id);
+                if (el) el.innerHTML = '';
+            });
+            // Go back to title
+            showScreen('title');
+            toast('You left the game. 👋', 'info');
+        };
+    }
+
     if ($('play-again-status')) $('play-again-status').textContent = '';
 
     showScreen('end');
@@ -660,14 +699,37 @@ socket.on('roundStarted', data => {
     state.roundId = data.roundId;
     state.alivePlayers = data.alivePlayers;
     state.timerTotal = data.timerSeconds;
+    // Full state reset for new round
     state.hasVoted = false;
     state.detKickUsed = false;
-    state.answerSubmitted = false; // Reset for next round
+    state.answerSubmitted = false;
+    state.correctWord = null;
+    state.selectedDetSuspect = null;
+    state.role = null;
+    state.roleData = null;
+    state.privatePayload = null;
+    state._lastRoleRoundId = null; // Reset dedup guard
+    // Hide any leftover modals from the previous round
+    ['modal-vote', 'modal-kick-result', 'modal-suspect-pick'].forEach(id => {
+        const el = $(id);
+        if (el) el.classList.add('hidden');
+    });
+    // Hide all role views to prevent stale display
+    ['role-guest', 'role-killer', 'role-detective', 'spectator-status'].forEach(id => {
+        const el = $(id);
+        if (el) el.classList.add('hidden');
+    });
     $('hall-chat-history').innerHTML = '';
     addChat('hall-chat-history', '', '🔮 A new round has begun. Solve the word OR join the meeting!', false, true);
 });
 
 socket.on('roleAssign', data => {
+    // Dedup guard: ignore if we already processed this exact roundId
+    if (state._lastRoleRoundId && state._lastRoleRoundId === data.roundId) {
+        console.log('[DEDUP] Ignoring duplicate roleAssign for round', data.roundId);
+        return;
+    }
+    state._lastRoleRoundId = data.roundId;
     showRoleReveal(data);
 });
 
@@ -927,6 +989,151 @@ function initBackgroundBeans() {
     setInterval(spawnBean, 3000);
 }
 
+// ── Auth System ────────────────────────────────────────────────
+function initAuth() {
+    // Tab switching
+    document.querySelectorAll('.auth-tab').forEach(tab => {
+        tab.addEventListener('click', () => {
+            document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
+            tab.classList.add('active');
+            const isLogin = tab.dataset.tab === 'login';
+            $('form-login').classList.toggle('hidden', !isLogin);
+            $('form-register').classList.toggle('hidden', isLogin);
+            // Clear errors
+            $('auth-login-error').classList.add('hidden');
+            $('auth-reg-error').classList.add('hidden');
+        });
+    });
+
+    // Open / Close modal
+    $('btn-open-auth').addEventListener('click', () => $('modal-auth').classList.remove('hidden'));
+    $('btn-close-auth').addEventListener('click', () => $('modal-auth').classList.add('hidden'));
+    $('modal-auth').addEventListener('click', e => {
+        if (e.target === $('modal-auth')) $('modal-auth').classList.add('hidden');
+    });
+
+    // Login form
+    $('form-login').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const username = $('auth-login-user').value.trim();
+        const password = $('auth-login-pass').value;
+        if (!username || !password) {
+            showAuthError('auth-login-error', 'Please fill in all fields.');
+            return;
+        }
+        try {
+            const res = await fetch('/api/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, password })
+            });
+            const data = await res.json();
+            if (data.ok) {
+                state.authToken = data.token;
+                state.authUsername = data.username;
+                localStorage.setItem('mwg_auth', data.token);
+                $('inp-name').value = data.username;
+                $('modal-auth').classList.add('hidden');
+                updateAuthUI(data.username);
+                toast(`Logged in as ${data.username}! \u2705`, 'success');
+            } else {
+                showAuthError('auth-login-error', data.error || 'Login failed.');
+            }
+        } catch (err) {
+            showAuthError('auth-login-error', 'Connection error. Try again.');
+        }
+    });
+
+    // Register form
+    $('form-register').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const username = $('auth-reg-user').value.trim();
+        const password = $('auth-reg-pass').value;
+        const password2 = $('auth-reg-pass2').value;
+        if (!username || !password || !password2) {
+            showAuthError('auth-reg-error', 'Please fill in all fields.');
+            return;
+        }
+        if (password !== password2) {
+            showAuthError('auth-reg-error', 'Passwords do not match.');
+            return;
+        }
+        try {
+            const res = await fetch('/api/register', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, password })
+            });
+            const data = await res.json();
+            if (data.ok) {
+                state.authToken = data.token;
+                state.authUsername = data.username;
+                localStorage.setItem('mwg_auth', data.token);
+                $('inp-name').value = data.username;
+                $('modal-auth').classList.add('hidden');
+                updateAuthUI(data.username);
+                toast(`Account created! Welcome, ${data.username}! \ud83c\udf89`, 'success');
+            } else {
+                showAuthError('auth-reg-error', data.error || 'Registration failed.');
+            }
+        } catch (err) {
+            showAuthError('auth-reg-error', 'Connection error. Try again.');
+        }
+    });
+
+    // Logout
+    $('btn-logout').addEventListener('click', () => {
+        state.authToken = null;
+        state.authUsername = null;
+        localStorage.removeItem('mwg_auth');
+        $('auth-logged-in').classList.add('hidden');
+        $('auth-logged-out').classList.remove('hidden');
+        $('inp-name').value = '';
+        $('inp-name').placeholder = 'Enter your display name...';
+        toast('Logged out. \ud83d\udc4b', 'info');
+    });
+
+    // Auto-login on page load if token exists
+    if (state.authToken) {
+        checkAuthToken(state.authToken);
+    }
+}
+
+async function checkAuthToken(token) {
+    try {
+        const res = await fetch('/api/profile', {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const data = await res.json();
+        if (data.ok) {
+            state.authUsername = data.username;
+            $('inp-name').value = data.username;
+            updateAuthUI(data.username, data.gamesPlayed, data.gamesWon);
+        } else {
+            // Token expired/invalid
+            localStorage.removeItem('mwg_auth');
+            state.authToken = null;
+        }
+    } catch (err) {
+        // Silently fail — user can still play as guest
+    }
+}
+
+function updateAuthUI(username, gamesPlayed, gamesWon) {
+    $('auth-logged-out').classList.add('hidden');
+    $('auth-logged-in').classList.remove('hidden');
+    $('auth-display-name').textContent = username;
+    if (typeof gamesPlayed === 'number') {
+        $('auth-stats-text').textContent = `${gamesPlayed} games • ${gamesWon || 0} wins`;
+    }
+}
+
+function showAuthError(elementId, message) {
+    const el = $(elementId);
+    el.textContent = message;
+    el.classList.remove('hidden');
+}
+
 // ── Init ──────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
     initTitleScreen();
@@ -934,5 +1141,6 @@ document.addEventListener('DOMContentLoaded', () => {
     initRoleScreen();
     initRoundScreen();
     initBackgroundBeans();
+    initAuth();
     showScreen('title');
 });

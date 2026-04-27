@@ -889,6 +889,9 @@ input:checked+.slider::before {
 .chat-form {
     display: flex;
     gap: 8px;
+    position: relative;
+    z-index: 50;
+    pointer-events: auto;
 }
 
 /* Typing indicator */
@@ -2096,4 +2099,167 @@ input:checked+.slider::before {
     .role-reveal-card {
         padding: 24px 18px;
     }
+
+    .end-actions {
+        flex-direction: column;
+    }
+}
+
+/* ── Game End Actions ────────────────────────────────────────── */
+.end-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: wrap;
+    margin-top: 8px;
+}
+
+.end-actions .btn {
+    flex: 1;
+    min-width: 140px;
+    max-width: 220px;
+}
+
+.btn-exit {
+    background: var(--bg2);
+    color: var(--red);
+    border: var(--bw) solid var(--red) !important;
+    box-shadow: var(--shadow-sm);
+    transition: all var(--transition);
+}
+
+.btn-exit:hover:not(:disabled) {
+    background: rgba(248, 113, 113, 0.15);
+    transform: translate(-2px, -2px);
+    box-shadow: 4px 4px 0px var(--border);
+}
+
+/* ══════════════  AUTH SYSTEM STYLES  ══════════════════════════ */
+
+/* Auth Status Bar on Title Screen */
+.auth-bar {
+    margin-bottom: 16px;
+    padding: 12px 16px;
+    background: rgba(255, 255, 255, 0.04);
+    border: 2px solid rgba(255, 255, 255, 0.08);
+    border-radius: var(--radius-sm);
+    text-align: center;
+}
+
+.auth-status {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+}
+
+.auth-logged-in .auth-status {
+    flex-direction: row;
+}
+
+.auth-user-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex: 1;
+}
+
+.auth-avatar {
+    font-size: 28px;
+    width: 42px;
+    height: 42px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(168, 85, 247, 0.2);
+    border: 2px solid var(--border);
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.auth-username {
+    font-weight: 700;
+    font-size: 16px;
+    color: var(--purple);
+}
+
+.auth-stats-text {
+    font-size: 11px !important;
+}
+
+#auth-logged-in {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.btn-auth {
+    border: 2px solid rgba(168, 85, 247, 0.4) !important;
+    color: var(--purple) !important;
+    padding: 8px 16px !important;
+    font-size: 13px !important;
+}
+
+.btn-auth:hover {
+    background: rgba(168, 85, 247, 0.1) !important;
+    border-color: var(--purple) !important;
+}
+
+/* Auth Modal */
+.modal-auth {
+    width: min(400px, 92vw);
+    padding: 28px 24px;
+}
+
+.auth-tabs {
+    display: flex;
+    gap: 0;
+    margin-bottom: 20px;
+    border: 2px solid var(--border);
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+}
+
+.auth-tab {
+    flex: 1;
+    padding: 10px 16px;
+    background: var(--bg2);
+    border: none;
+    color: var(--text-muted);
+    font-family: var(--font-body);
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.auth-tab:first-child {
+    border-right: 2px solid var(--border);
+}
+
+.auth-tab.active {
+    background: rgba(168, 85, 247, 0.2);
+    color: var(--purple);
+}
+
+.auth-tab:hover:not(.active) {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.auth-form {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.auth-error {
+    color: var(--red);
+    font-size: 13px;
+    font-weight: 600;
+    padding: 8px 12px;
+    background: rgba(248, 113, 113, 0.1);
+    border: 2px solid rgba(248, 113, 113, 0.3);
+    border-radius: var(--radius-sm);
+    margin: 0;
 }

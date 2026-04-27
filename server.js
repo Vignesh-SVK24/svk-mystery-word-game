@@ -10,6 +10,7 @@ const qrcode = require('qrcode-terminal');
 
 const { GameManager } = require('./src/gameManager');
 const { createSession, getSession, markDisconnected, markReconnected, removeSession } = require('./src/sessionManager');
+const userStore = require('./src/userStore');
 
 const PORT = process.env.PORT || 3000;
 
@@ -20,7 +21,27 @@ const io = new Server(server, {
 });
 
 // Serve frontend static files
+app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
+
+// ── Auth API Routes ────────────────────────────────────────────────────────
+app.post('/api/register', (req, res) => {
+    const { username, password } = req.body || {};
+    const result = userStore.register(username, password);
+    res.json(result);
+});
+
+app.post('/api/login', (req, res) => {
+    const { username, password } = req.body || {};
+    const result = userStore.login(username, password);
+    res.json(result);
+});
+
+app.get('/api/profile', (req, res) => {
+    const token = req.headers.authorization?.replace('Bearer ', '');
+    const result = userStore.getUserByToken(token);
+    res.json(result);
+});
 
 function getLanIP() {
     const interfaces = os.networkInterfaces();
@@ -246,6 +267,43 @@ io.on('connection', (socket) => {
         const player = game.getPlayerBySocket(socket.id);
         if (!player) return;
         game.playerRestart(player.id);
+    });
+
+    // ─ Exit Game ─
+    socket.on('exitGame', () => {
+        const code = socketToRoom.get(socket.id);
+        const game = rooms.get(code);
+        if (!game) return;
+        const player = game.forceRemovePlayer(socket.id);
+        if (player) {
+            const token = player.sessionToken;
+            if (token) removeSession(token);
+            socket.leave(code);
+            console.log(`[SOCKET] Exited: ${player.name} from ${code}`);
+            io.to(code).emit('chatMessage', {
+                from: 'SYSTEM',
+                text: `${player.name} has left the game.`,
+                timestamp: Date.now()
+            });
+            game.broadcastLobbyState();
+
+            // Update restart vote counts if game is at end
+            if (game.players.size > 0 && game.state === 'game_end') {
+                game.emitToRoom('restartProgress', {
+                    ready: game.restartVotes.size,
+                    total: game.players.size
+                });
+                // Check if remaining players are all ready now
+                game.checkRestartReady();
+            }
+
+            // Clean up room if empty
+            if (game.players.size === 0) {
+                rooms.delete(code);
+                console.log(`[ROOM] Deleted: ${code} (empty)`);
+            }
+        }
+        socketToRoom.delete(socket.id);
     });
 
     // ─ Disconnect ─
