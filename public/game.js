@@ -471,14 +471,15 @@ function renderMyRolePanel() {
     panel.innerHTML = content + meetingBtnHtml;
 
     // Attach listeners
-    if (state.answerSubmitted) {
-        $('btn-call-meeting')?.addEventListener('click', () => {
+    const callBtn = $('btn-call-meeting');
+    if (callBtn && state.answerSubmitted) {
+        // Use onclick to overwrite any existing listener
+        callBtn.onclick = () => {
             socket.emit('callMeeting');
-            $('btn-call-meeting').disabled = true;
-            $('btn-call-meeting').textContent = 'Calling...';
-        });
+            callBtn.disabled = true;
+            callBtn.textContent = 'Calling...';
+        };
     }
-
     if (state.role === 'guest' && !state.answerSubmitted) {
         $('my-ans-btn')?.addEventListener('click', () => {
             const answer = $('my-ans')?.value.trim();
@@ -877,21 +878,34 @@ socket.on('correctGuess', data => {
 });
 
 socket.on('submitAnswerResult', data => {
-    if (state.role !== 'guest') return;
     if (data.ok) {
-        if (data.correct) {
-            state.answerSubmitted = true; // Mark as submitted locally too
-            $('answer-feedback').textContent = '✅ Correct! Joining meeting...';
-            $('answer-feedback').className = 'answer-feedback correct';
-            $('btn-submit-answer').disabled = true;
-            renderMyRolePanel(); // Update sidebar immediately
+        if (state.role === 'guest') {
+            if (data.correct) {
+                state.answerSubmitted = true;
+                $('answer-feedback').textContent = '✅ Correct! Joining meeting...';
+                $('answer-feedback').className = 'answer-feedback correct';
+                $('btn-submit-answer').disabled = true;
+                renderMyRolePanel(); // Update sidebar immediately
+            } else {
+                $('answer-feedback').textContent = '❌ Wrong answer, try again.';
+                $('answer-feedback').className = 'answer-feedback wrong';
+                toast('Incorrect word, try again!', 'error');
+            }
         } else {
-            $('answer-feedback').textContent = '❌ Wrong answer, try again.';
-            $('answer-feedback').className = 'answer-feedback wrong';
-            toast('Incorrect word, try again!', 'error');
+            // For Killer/Detective
+            state.answerSubmitted = true;
+            renderMyRolePanel();
         }
     } else {
         toast(data.reason || 'Submission failed.', 'error');
+        // Re-enable buttons if they failed
+        if (state.role === 'killer') {
+             const kb = $('btn-killer-ready');
+             if (kb) { kb.disabled = false; kb.textContent = 'Ready for Meeting 👊'; }
+        } else if (state.role === 'detective') {
+             const db = $('btn-det-ready');
+             if (db) { db.disabled = false; db.textContent = 'Ready for Meeting 👊'; }
+        }
     }
 });
 
