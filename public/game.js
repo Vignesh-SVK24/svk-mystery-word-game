@@ -894,7 +894,7 @@ socket.on('submitAnswerResult', data => {
         } else {
             // For Killer/Detective
             state.answerSubmitted = true;
-            renderMyRolePanel();
+            showRoundScreen(); // Transition to the main match screen
         }
     } else {
         toast(data.reason || 'Submission failed.', 'error');
