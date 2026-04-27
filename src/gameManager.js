@@ -46,9 +46,6 @@ class GameManager {
             kickedPlayers: []
         };
         this.restartVotes = new Set(); // Track who wants to play again
-        this._matchEpoch = 0; // Incremented on each new match to invalidate stale timers
-        this._scheduledTimeout = null; // Track the scheduled next-round timeout
-        this._previousKillers = new Set(); // Track who has been killer across matches
     }
 
     // Helper to emit to the room
@@ -216,40 +213,27 @@ class GameManager {
 
     assignRoles() {
         const ps = [...this.players.values()];
-        // Reset everyone fully first
+        // Reset everyone first
         for (const p of ps) {
-            p.role = null;
             p.alive = true;
             p.spectator = false;
-            p.privatePayload = null;
         }
 
-        // Pick killer — prefer someone who hasn't been killer recently
-        let candidates = ps.filter(p => !this._previousKillers.has(p.id));
-        if (candidates.length === 0) {
-            // Everyone has been killer, reset history
-            this._previousKillers.clear();
-            candidates = ps;
-        }
-        const killerIdx = Math.floor(Math.random() * candidates.length);
-        const killer = candidates[killerIdx];
-        killer.role = 'killer';
-        this._previousKillers.add(killer.id);
-
-        // Remaining players shuffled for detective/guest
-        const rest = ps.filter(p => p.id !== killer.id);
-        for (let i = rest.length - 1; i > 0; i--) {
+        // Shuffle
+        for (let i = ps.length - 1; i > 0; i--) {
             const j = Math.floor(Math.random() * (i + 1));
-            [rest[i], rest[j]] = [rest[j], rest[i]];
+            [ps[i], ps[j]] = [ps[j], ps[i]];
         }
 
         let idx = 0;
+        ps[idx++].role = 'killer';
+
         if (this.detectiveEnabled && ps.length >= 5) {
-            rest[idx++].role = 'detective';
+            ps[idx++].role = 'detective';
         }
 
-        for (; idx < rest.length; idx++) {
-            rest[idx].role = 'guest';
+        for (; idx < ps.length; idx++) {
+            ps[idx].role = 'guest';
         }
     }
 
@@ -330,18 +314,11 @@ class GameManager {
     }
 
     _scheduleNextRound(delay = 5000) {
-        // Cancel any previous scheduled timeout
-        if (this._scheduledTimeout) {
-            clearTimeout(this._scheduledTimeout);
-            this._scheduledTimeout = null;
-        }
-        const epoch = this._matchEpoch; // Capture current match epoch
-        this._scheduledTimeout = setTimeout(() => {
-            this._scheduledTimeout = null;
-            // Only proceed if we're still in the same match AND not ended
-            if (this._matchEpoch !== epoch) return;
-            if (this.state === GAME_STATES.GAME_END || this.state === GAME_STATES.LOBBY) return;
-            this.startRound();
+        setTimeout(() => {
+            if (this.state !== GAME_STATES.GAME_END) {
+                // DON'T re-assign roles here, keep roles persistent in same match
+                this.startRound();
+            }
         }, delay);
     }
 
@@ -509,9 +486,7 @@ class GameManager {
         const winCheck = this._checkWinCondition(kick, roleRevealed);
         if (winCheck.over) {
             this.state = GAME_STATES.GAME_END;
-            const epoch = this._matchEpoch; // Guard the delayed emit
             setTimeout(() => {
-                if (this._matchEpoch !== epoch) return; // Match already restarted
                 this.emitToRoom('gameEnd', {
                     winner: winCheck.winner,
                     message: winCheck.message,
@@ -537,17 +512,7 @@ class GameManager {
     startGame(requesterId) {
         if (requesterId !== this.hostId) return { ok: false, reason: 'Only the host can start.' };
         if (!this.canStart()) return { ok: false, reason: 'Not everyone is ready or not enough players.' };
-        this.restartVotes.clear();
-        // Cancel any dangling timers and bump epoch
-        if (this._scheduledTimeout) {
-            clearTimeout(this._scheduledTimeout);
-            this._scheduledTimeout = null;
-        }
-        if (this.timerHandle) {
-            clearInterval(this.timerHandle);
-            this.timerHandle = null;
-        }
-        this._matchEpoch++;
+        this.restartVotes.clear(); // Clear any pending restart votes
         this.assignRoles();
         this.startRound();
         return { ok: true };
@@ -562,79 +527,16 @@ class GameManager {
             total: this.players.size
         });
 
-        this.checkRestartReady();
-    }
-
-    checkRestartReady() {
-        if (this.state !== GAME_STATES.GAME_END) return;
-        if (this.players.size < 4) return; // Need minimum 4 to restart
         if (this.restartVotes.size >= this.players.size) {
-            // Cancel any dangling scheduled timeouts from previous match
-            if (this._scheduledTimeout) {
-                clearTimeout(this._scheduledTimeout);
-                this._scheduledTimeout = null;
-            }
-            if (this.timerHandle) {
-                clearInterval(this.timerHandle);
-                this.timerHandle = null;
-            }
-
-            // Increment match epoch to invalidate ALL stale timers/callbacks
-            this._matchEpoch++;
-
-            // Reset ALL player state for new match
-            for (const p of this.players.values()) {
-                p.role = null;
-                p.alive = true;
-                p.spectator = false;
-                p.ready = false;
-                p.privatePayload = null;
-                p.disconnected = false;
-            }
-
-            // Reset game state
+            // Reset for new match
             this.roundId = 0;
             this.stats = { roundsPlayed: 0, kickedPlayers: [] };
             this.restartVotes.clear();
-            this.correctGuessers.clear();
-            this.readyForMeeting.clear();
-            this.currentWord = null;
-            this.detectiveUsedKick = false;
-            this.voteManager.reset();
 
-            // Start new match
+            // Start match immediately
             this.assignRoles();
             this.startRound();
         }
-    }
-
-    // Force-remove a player from the game entirely (used for Exit)
-    forceRemovePlayer(socketId) {
-        const playerId = this.socketToPlayer.get(socketId);
-        if (!playerId) return null;
-        const player = this.players.get(playerId);
-        if (!player) return null;
-
-        // Return the color to the pool
-        if (player.color && !this.availableColors.includes(player.color)) {
-            this.availableColors.push(player.color);
-        }
-
-        // Remove from all maps and sets
-        this.players.delete(playerId);
-        this.socketToPlayer.delete(socketId);
-        if (player.sessionToken) this.tokenToSocket.delete(player.sessionToken);
-        this.restartVotes.delete(playerId);
-        this.correctGuessers.delete(playerId);
-        this.readyForMeeting.delete(playerId);
-
-        // Host migration
-        if (playerId === this.hostId) {
-            const next = [...this.players.values()].find(p => !p.disconnected);
-            this.hostId = next ? next.id : null;
-        }
-
-        return player;
     }
 }
 

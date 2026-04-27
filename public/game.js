@@ -151,6 +151,11 @@ function initLobbyScreen() {
         socket.emit('setConfig', { meetingTimer: parseInt(val) });
     });
 
+    $('btn-exit-lobby').addEventListener('click', () => {
+        socket.emit('exitGame');
+        resetClientState();
+    });
+
     document.querySelectorAll('.btn-diff').forEach(btn => {
         btn.addEventListener('click', () => {
             document.querySelectorAll('.btn-diff').forEach(b => b.classList.remove('active'));
@@ -623,39 +628,52 @@ function showGameEnd(data) {
     // Exit button
     const exitBtn = $('btn-exit-game');
     if (exitBtn) {
-        exitBtn.onclick = () => {
+        // Remove old listeners
+        const newExit = exitBtn.cloneNode(true);
+        exitBtn.parentNode.replaceChild(newExit, exitBtn);
+        newExit.onclick = () => {
             socket.emit('exitGame');
-            // Reset all client state
-            state.playerId = null;
-            state.playerName = '';
-            state.isHost = false;
-            state.role = null;
-            state.privatePayload = null;
-            state.roundId = 0;
-            state.alivePlayers = [];
-            state.lobbyPlayers = [];
-            state.hasVoted = false;
-            state.answerSubmitted = false;
-            state.gameState = 'lobby';
-            state.roomCode = null;
-            state.roleData = null;
-            state.correctWord = null;
-            state.sessionToken = null;
-            localStorage.removeItem('mwg_session');
-            // Clear chat histories
-            ['lobby-chat-history', 'round-chat-history', 'hall-chat-history'].forEach(id => {
-                const el = $(id);
-                if (el) el.innerHTML = '';
-            });
-            // Go back to title
-            showScreen('title');
-            toast('You left the game. 👋', 'info');
+            resetClientState();
         };
     }
 
     if ($('play-again-status')) $('play-again-status').textContent = '';
 
     showScreen('end');
+}
+
+// ── Client State Reset (for exiting) ──────────────────────────
+function resetClientState() {
+    $('timer-display').textContent = '0s';
+    $('meeting-timer-display').textContent = '0s';
+    $('lobby-chat-history').innerHTML = '';
+    $('hall-chat-history').innerHTML = '';
+    $('btn-ready').classList.remove('btn-primary');
+    $('btn-ready').classList.add('btn-outline');
+    
+    // Don't reset name and auth token! Let them stay logged in
+    const cachedName = state.playerName;
+    const cachedAuthStr = state.authToken;
+    const cachedAuthUsername = state.authUsername;
+    
+    // Wipe specific variables but keep auth intact
+    state.playerId = null;
+    state.isHost = false;
+    state.role = null;
+    state.privatePayload = null;
+    state.roundId = 0;
+    state.alivePlayers = [];
+    state.lobbyPlayers = [];
+    state.gameState = 'lobby';
+    state.roomCode = null;
+    
+    // Restore preserved data
+    state.playerName = cachedName;
+    state.authToken = cachedAuthStr;
+    state.authUsername = cachedAuthUsername;
+
+    showScreen('title');
+    toast('Exited room.', 'info');
 }
 
 // ── Socket Event Handlers ─────────────────────────────────────
@@ -711,11 +729,6 @@ socket.on('roundStarted', data => {
     state._lastRoleRoundId = null; // Reset dedup guard
     // Hide any leftover modals from the previous round
     ['modal-vote', 'modal-kick-result', 'modal-suspect-pick'].forEach(id => {
-        const el = $(id);
-        if (el) el.classList.add('hidden');
-    });
-    // Hide all role views to prevent stale display
-    ['role-guest', 'role-killer', 'role-detective', 'spectator-status'].forEach(id => {
         const el = $(id);
         if (el) el.classList.add('hidden');
     });
