@@ -451,20 +451,23 @@ function renderMyRolePanel() {
         content = `<div class="my-role-mini">
       <div style="color:var(--red);font-weight:700; margin-bottom:8px;">🔪 Killer</div>
       <div class="mini-clue">Your Hint: ${escHtml(state.privatePayload?.clue || '')}</div>
+      ${state.answerSubmitted ? '' : `<p class="note" style="margin-top:8px;">Go to the role screen and click <strong>Ready</strong> to unlock the meeting.</p>`}
     </div>`;
     } else if (state.role === 'detective') {
         content = `<div class="my-role-mini">
       <div style="color:var(--purple);font-weight:700;">🔍 Detective</div>
       <p class="note" style="margin-top:8px;">Find the Killer! ${state.detKickUsed ? '<br>⚠️ Kick already used.' : '<br>⚡ Kick available.'}</p>
+      ${state.answerSubmitted ? '' : `<p class="note" style="margin-top:4px;">Go to the role screen and click <strong>Ready</strong> to unlock the meeting.</p>`}
     </div>`;
     }
 
+    const canCallMeeting = state.answerSubmitted;
     const meetingBtnHtml = `
       <div class="mt16 pt16" style="border-top: 1px solid rgba(255,255,255,0.1);">
-        <button id="btn-call-meeting" class="btn btn-warning w100 ${state.answerSubmitted ? '' : 'disabled'}" ${state.answerSubmitted ? '' : 'disabled'}>
+        <button id="btn-call-meeting" class="btn btn-warning w100${canCallMeeting ? '' : ' disabled'}" ${canCallMeeting ? '' : 'disabled'}>
           🛎️ Call Meeting
         </button>
-        ${!state.answerSubmitted ? `<p class="note center xsmall mt4">${state.role === 'guest' ? 'Solve word' : 'Click Ready'} to call meeting</p>` : ''}
+        ${!canCallMeeting ? `<p class="note center xsmall mt4">${state.role === 'guest' ? 'Solve the word' : 'Click Ready on your role screen'} to call meeting</p>` : ''}
       </div>
     `;
 
@@ -472,7 +475,7 @@ function renderMyRolePanel() {
 
     // Attach listeners
     const callBtn = $('btn-call-meeting');
-    if (callBtn && state.answerSubmitted) {
+    if (callBtn && canCallMeeting) {
         // Use onclick to overwrite any existing listener
         callBtn.onclick = () => {
             socket.emit('callMeeting');
@@ -629,10 +632,8 @@ function showGameEnd(data) {
     // Exit button
     const exitBtn = $('btn-exit-game');
     if (exitBtn) {
-        // Remove old listeners
-        const newExit = exitBtn.cloneNode(true);
-        exitBtn.parentNode.replaceChild(newExit, exitBtn);
-        newExit.onclick = () => {
+        exitBtn.onclick = () => {
+            console.log('Exit clicked from End Screen');
             socket.emit('exitGame');
             resetClientState();
         };
@@ -677,8 +678,13 @@ function resetClientState() {
     if (cachedName) $('inp-name').value = cachedName;
     $('inp-room').value = '';
 
+    // Clear URL parameters so the 'room' code doesn't stick around
+    const url = new URL(window.location);
+    url.searchParams.delete('room');
+    window.history.replaceState({}, document.title, url.pathname);
+
     showScreen('title');
-    toast('Exited room.', 'info');
+    toast('Exited to home.', 'info');
 }
 
 // ── Socket Event Handlers ─────────────────────────────────────
@@ -722,15 +728,13 @@ socket.on('roundStarted', data => {
     state.roundId = data.roundId;
     state.alivePlayers = data.alivePlayers;
     state.timerTotal = data.timerSeconds;
-    // Full state reset for new round
+    // Reset per-round flags ONLY — do NOT clear role/privatePayload here!
+    // (roleAssign will arrive right after and set those properly)
     state.hasVoted = false;
     state.detKickUsed = false;
     state.answerSubmitted = false;
     state.correctWord = null;
     state.selectedDetSuspect = null;
-    state.role = null;
-    state.roleData = null;
-    state.privatePayload = null;
     state._lastRoleRoundId = null; // Reset dedup guard
     // Hide any leftover modals from the previous round
     ['modal-vote', 'modal-kick-result', 'modal-suspect-pick'].forEach(id => {
@@ -885,7 +889,7 @@ socket.on('submitAnswerResult', data => {
                 $('answer-feedback').textContent = '✅ Correct! Joining meeting...';
                 $('answer-feedback').className = 'answer-feedback correct';
                 $('btn-submit-answer').disabled = true;
-                renderMyRolePanel(); // Update sidebar immediately
+                showRoundScreen(); // Transition immediately to the match screen
             } else {
                 $('answer-feedback').textContent = '❌ Wrong answer, try again.';
                 $('answer-feedback').className = 'answer-feedback wrong';

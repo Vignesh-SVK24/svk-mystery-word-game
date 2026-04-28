@@ -269,7 +269,15 @@ class GameManager {
         const clue = getClue(wordObj);
         const scrambledLetters = scramble(this.currentWord);
 
-        // Send private payloads
+        // Broadcast roundStarted FIRST so clients can reset their state cleanly
+        this.emitToRoom('roundStarted', {
+            roundId: this.roundId,
+            timerSeconds: this.roundTimer,
+            alivePlayers: this.getAlivePlayers().map(p => ({ id: p.id, name: p.name, color: p.color }))
+        });
+
+        // THEN send private role payloads to each player
+        // (roleAssign must arrive after roundStarted so client state is clean when role is set)
         for (const player of this.players.values()) {
             if (player.disconnected) continue;
             let payload;
@@ -289,19 +297,12 @@ class GameManager {
             } else {
                 payload = {
                     ...basePayload,
-                    privatePayload: { word: this.currentWord, clue }
+                    privatePayload: { word: this.currentWord, clue, scrambled: scrambledLetters }
                 };
             }
             player.privatePayload = payload;
             this.io.to(player.socketId).emit('roleAssign', payload);
         }
-
-        // Broadcast alive list to all (no role info)
-        this.emitToRoom('roundStarted', {
-            roundId: this.roundId,
-            timerSeconds: this.roundTimer,
-            alivePlayers: this.getAlivePlayers().map(p => ({ id: p.id, name: p.name, color: p.color }))
-        });
 
         // Start round timer
         this._startTimer(this.roundTimer);
